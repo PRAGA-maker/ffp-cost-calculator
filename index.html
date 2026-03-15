@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Estimate federal Medicaid matching potential for California psychiatric facilities under the BH-CONNECT IMD-FFP program. Free tool by the Courtyards Institute.">
+<title>IMD-FFP Cost Calculator | Courtyards Institute</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --card: #ffffff;
+    --text: #1a1a1a;
+    --muted: #6b7280;
+    --accent: #1e3a5f;
+    --accent-light: #e8eef5;
+    --green: #059669;
+    --green-light: #ecfdf5;
+    --red: #dc2626;
+    --red-light: #fef2f2;
+    --yellow: #d97706;
+    --yellow-light: #fffbeb;
+    --border: #e5e7eb;
+    --radius: 8px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.6; font-size: 15px;
+  }
+  .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+  header { text-align: center; margin-bottom: 32px; padding: 24px 0; border-bottom: 1px solid var(--border); }
+  header h1 { font-size: 24px; font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+  header p { color: var(--muted); font-size: 14px; }
+  header a { color: var(--accent); text-decoration: none; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px; margin-bottom: 16px;
+  }
+  .card h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--accent); }
+  .card h3 { font-size: 14px; font-weight: 600; margin: 16px 0 8px; }
+
+  label { display: block; font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 4px; }
+  select, input[type="number"] {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+    border-radius: var(--radius); font-size: 15px; background: var(--bg);
+    transition: border-color 0.15s;
+  }
+  select:focus, input:focus { outline: none; border-color: var(--accent); }
+  .field { margin-bottom: 16px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .facility-info {
+    display: none; margin-top: 8px; padding: 10px 14px;
+    background: var(--accent-light); border-radius: var(--radius);
+    font-size: 13px; color: var(--accent);
+  }
+  .facility-info.visible { display: block; }
+  .facility-info span { font-weight: 600; }
+
+  .checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .checkbox-group label {
+    display: flex; align-items: center; gap: 6px; font-size: 14px;
+    color: var(--text); cursor: pointer; padding: 6px 12px;
+    border: 1px solid var(--border); border-radius: 20px; background: var(--bg);
+    transition: all 0.15s;
+  }
+  .checkbox-group label.checked {
+    background: var(--green-light); border-color: var(--green); color: var(--green);
+  }
+  .checkbox-group input { display: none; }
+
+  .result-box {
+    padding: 20px; border-radius: var(--radius); margin-bottom: 12px;
+    border-left: 4px solid;
+  }
+  .result-box.positive { background: var(--green-light); border-color: var(--green); }
+  .result-box.negative { background: var(--red-light); border-color: var(--red); }
+  .result-box.neutral { background: var(--yellow-light); border-color: var(--yellow); }
+  .result-box.info { background: var(--accent-light); border-color: var(--accent); }
+  .result-big { font-size: 28px; font-weight: 700; }
+  .result-label { font-size: 13px; color: var(--muted); margin-bottom: 2px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 12px 0; }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr.highlight td { font-weight: 600; background: var(--accent-light); }
+
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .compare-col { padding: 12px 16px; }
+  .compare-col:first-child { border-right: 1px solid var(--border); }
+  .compare-header { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 8px; }
+  .compare-item { margin-bottom: 8px; }
+  .compare-item .val { font-weight: 600; }
+  .compare-item .lbl { font-size: 12px; color: var(--muted); }
+
+  .tag {
+    display: inline-block; padding: 2px 10px; border-radius: 12px;
+    font-size: 12px; font-weight: 600;
+  }
+  .tag.pass { background: var(--green-light); color: var(--green); }
+  .tag.fail { background: var(--red-light); color: var(--red); }
+  .tag.warn { background: var(--yellow-light); color: var(--yellow); }
+
+  .note { font-size: 13px; color: var(--muted); margin-top: 12px; padding: 12px; background: var(--bg); border-radius: var(--radius); }
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+  .btn-primary {
+    padding: 12px 40px; font-size: 16px; font-weight: 600;
+    background: var(--accent); color: white; border: none;
+    border-radius: var(--radius); cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+
+  #results { display: none; }
+  #results.visible { display: block; }
+
+  footer { text-align: center; padding: 24px 0; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); margin-top: 32px; }
+  footer a { color: var(--accent); }
+
+  /* Mobile */
+  @media (max-width: 600px) {
+    .field-row { grid-template-columns: 1fr; }
+    .compare-grid { grid-template-columns: 1fr; }
+    .compare-col:first-child { border-right: none; border-bottom: 1px solid var(--border); }
+    .result-big { font-size: 22px; }
+    header h1 { font-size: 20px; }
+    .card { padding: 16px; }
+  }
+
+  /* Print */
+  @media print {
+    body { font-size: 12px; background: white; }
+    .card { border: 1px solid #ccc; page-break-inside: avoid; }
+    .btn-primary, .checkbox-group, select, input { display: none; }
+    #results { display: block !important; }
+    header { padding: 8px 0; margin-bottom: 16px; }
+    footer { font-size: 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>BH-CONNECT IMD-FFP Calculator</h1>
+  <p>Estimate federal matching potential for your county's qualifying psychiatric facilities</p>
+  <p style="margin-top:4px"><a href="https://www.courtyardsinstitute.org/">Courtyards Institute</a> &middot; Student-led policy research (Georgetown, Harvard)</p>
+</header>
+
+<!-- INPUT SECTION -->
+<div class="card">
+  <h2>1. Facility Information</h2>
+  <div class="field">
+    <label for="facility-select">Select a qualifying facility (or enter data manually)</label>
+    <select id="facility-select">
+      <option value="">-- Select facility or enter manually --</option>
+      <optgroup label="Contra Costa">
+        <option value="john_muir_bhc">John Muir Behavioral Health Center (73 beds, APH)</option>
+      </optgroup>
+      <optgroup label="Sonoma">
+        <option value="srbhh">Santa Rosa Behavioral Healthcare Hospital (144 beds, APH)</option>
+      </optgroup>
+      <optgroup label="Alameda">
+        <option value="fremont_hospital">Fremont Hospital (148 beds, APH)</option>
+      </optgroup>
+      <optgroup label="Orange">
+        <option value="aliso_ridge">Aliso Ridge Behavioral Health (119 beds, APH)</option>
+      </optgroup>
+      <optgroup label="San Bernardino">
+        <option value="canyon_ridge">Canyon Ridge Hospital (157 beds, APH)</option>
+      </optgroup>
+      <optgroup label="Los Angeles">
+        <option value="del_amo">Del Amo Hospital (166 beds, APH)</option>
+        <option value="bhc_alhambra">BHC Alhambra Hospital (97 beds, APH)</option>
+        <option value="resnick_ucla">Resnick Neuropsychiatric Hospital UCLA (74 beds, APH)</option>
+        <option value="charter_oak">Aurora Charter Oak Hospital (134 beds, APH)</option>
+        <option value="college_hospital">College Hospital (187 beds, APH)</option>
+      </optgroup>
+      <optgroup label="Kern">
+        <option value="bbhh">Bakersfield Behavioral Healthcare Hospital (90 beds, APH)</option>
+      </optgroup>
+      <optgroup label="Solano">
+        <option value="adventist_vallejo">Adventist Health Vallejo (61 beds, APH)</option>
+      </optgroup>
+      <optgroup label="Ventura">
+        <option value="aurora_vdm">Aurora Vista Del Mar Hospital (87 beds, APH)</option>
+      </optgroup>
+    </select>
+    <div class="facility-info" id="facility-info"></div>
+  </div>
+
+  <div class="field">
+    <label for="mc-ffs-revenue">Medi-Cal FFS Inpatient Revenue (annual $)</label>
+    <input type="number" id="mc-ffs-revenue" placeholder="e.g. 11000000" step="100000">
+    <div class="note" style="margin-top:4px">Find this at <strong>hcai.ca.gov</strong> &rarr; search your facility &rarr; "Payer Mix" &rarr; "Medi-Cal Fee for Service" inpatient revenue.</div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <label for="facility-type">Facility Type</label>
+      <select id="facility-type">
+        <option value="APH">Acute Psychiatric Hospital (APH)</option>
+        <option value="PHF">Psychiatric Health Facility (PHF)</option>
+        <option value="MHRC">Mental Health Rehabilitation Center (MHRC)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="alos">Average Length of Stay (days)</label>
+      <input type="number" id="alos" placeholder="e.g. 8" step="0.1" value="">
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>2. Existing EBP Infrastructure</h2>
+  <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Check programs your county already operates. These reduce incremental compliance costs. BHSA mandates ACT/FACT for all counties by July 2026.</p>
+  <div class="checkbox-group" id="ebp-group">
+    <label><input type="checkbox" id="ebp-act" onchange="togglePill(this)"> ACT Teams</label>
+    <label><input type="checkbox" id="ebp-fact" onchange="togglePill(this)"> FACT Program</label>
+    <label><input type="checkbox" id="ebp-csc" onchange="togglePill(this)"> CSC/First Episode</label>
+    <label><input type="checkbox" id="ebp-ips" onchange="togglePill(this)"> IPS Employment</label>
+    <label><input type="checkbox" id="ebp-chw" onchange="togglePill(this)"> Community Health Workers</label>
+    <label><input type="checkbox" id="ebp-peer" onchange="togglePill(this)"> Peer Support</label>
+  </div>
+  <div class="field" style="margin-top:16px">
+    <label for="county-size">County Population</label>
+    <select id="county-size">
+      <option value="small">Under 500,000</option>
+      <option value="medium" selected>500,000 - 2,000,000</option>
+      <option value="large">Over 2,000,000</option>
+    </select>
+  </div>
+</div>
+
+<div style="text-align:center;margin:20px 0">
+  <button class="btn-primary" onclick="calculate()">Calculate FFP Estimate</button>
+</div>
+
+<!-- RESULTS SECTION -->
+<div id="results">
+
+  <div class="card">
+    <h2>FFP Estimate</h2>
+    <div id="result-main" class="result-box positive">
+      <div class="result-label">Estimated Net Annual Benefit</div>
+      <div class="result-big" id="result-net">$0</div>
+    </div>
+    <div class="field-row" style="margin-top:12px">
+      <div class="result-box info">
+        <div class="result-label">Gross FFP (annual)</div>
+        <div style="font-size:20px;font-weight:700" id="result-gross">$0</div>
+      </div>
+      <div class="result-box info">
+        <div class="result-label">Compliance Costs (annual)</div>
+        <div style="font-size:20px;font-weight:700" id="result-compliance">$0</div>
+      </div>
+    </div>
+    <div class="field-row" style="margin-top:4px">
+      <div class="result-box info">
+        <div class="result-label">Monthly Cost of Delay</div>
+        <div style="font-size:20px;font-weight:700" id="result-delay">$0</div>
+      </div>
+      <div class="result-box info">
+        <div class="result-label">Cumulative Net (through 2029)</div>
+        <div style="font-size:20px;font-weight:700" id="result-cumulative">$0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>How It's Calculated</h2>
+    <table>
+      <tr><td>Medi-Cal FFS Revenue</td><td style="text-align:right;font-weight:600" id="calc-mcffs">-</td></tr>
+      <tr><td>&times; 0.76 (ages 21-64 with SMI)</td><td style="text-align:right;font-weight:600" id="calc-eligible">-</td></tr>
+      <tr><td>&times; 0.50 (federal match rate)</td><td style="text-align:right;font-weight:600" id="calc-gross">-</td></tr>
+      <tr id="calc-rb-row" style="display:none"><td>Room &amp; board adjustment (MHRC: &times;0.45)</td><td style="text-align:right;font-weight:600" id="calc-rb">-</td></tr>
+      <tr><td>&minus; Incremental compliance costs</td><td style="text-align:right;font-weight:600" id="calc-comp">-</td></tr>
+      <tr class="highlight"><td><strong>Net Annual Benefit</strong></td><td style="text-align:right;font-weight:700" id="calc-net">-</td></tr>
+    </table>
+    <div class="note" id="methodology-note"></div>
+  </div>
+
+  <div class="card">
+    <h2>Sensitivity Analysis</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:8px">How the estimate changes if actual Medi-Cal FFS revenue differs from reported HCAI data:</p>
+    <table>
+      <thead><tr><th>Scenario</th><th>MC FFS Revenue</th><th>Gross FFP</th><th>Net FFP</th></tr></thead>
+      <tbody id="sensitivity-table"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>LOS &amp; Viability Check</h2>
+    <div id="los-check"></div>
+  </div>
+
+  <div class="card">
+    <h2>Your Facility vs. Santa Barbara</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Santa Barbara opted out of IMD FFP in Feb 2026, projecting a $776K annual <em>loss</em>. Here's why your situation may be different:</p>
+    <div class="compare-grid">
+      <div class="compare-col">
+        <div class="compare-header">Your Facility</div>
+        <div class="compare-item"><div class="lbl">Type</div><div class="val" id="sb-your-type">-</div></div>
+        <div class="compare-item"><div class="lbl">Avg LOS</div><div class="val" id="sb-your-los">-</div></div>
+        <div class="compare-item"><div class="lbl">FFP Basis</div><div class="val" id="sb-your-basis">-</div></div>
+        <div class="compare-item"><div class="lbl">60-Day Risk</div><div class="val" id="sb-your-risk">-</div></div>
+        <div class="compare-item"><div class="lbl">Net FFP</div><div class="val" id="sb-your-ffp">-</div></div>
+      </div>
+      <div class="compare-col">
+        <div class="compare-header">Santa Barbara (opted out)</div>
+        <div class="compare-item"><div class="val">40-bed MHRC</div></div>
+        <div class="compare-item"><div class="val" style="color:var(--red)">&gt;60 days</div></div>
+        <div class="compare-item"><div class="val">Services only (R&amp;B excluded)</div></div>
+        <div class="compare-item"><div class="val"><span class="tag fail">High</span></div></div>
+        <div class="compare-item"><div class="val" style="color:var(--red)">-$776K/yr</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Post-2029 Sustainability</h2>
+    <div class="result-box info">
+      <p><strong>All evidence-based practices required by BH-CONNECT have permanent Medi-Cal billing authority</strong> under State Plan Amendments 24-0042 (ACT/FACT), 24-0051 (IPS, Peer Support), and 24-0052 (Enhanced CHW).</p>
+      <p style="margin-top:8px">If BH-CONNECT is not renewed after December 2029, the community programs you build continue billing regular Medi-Cal. Only the institutional matching (FFP on IMD stays) would cease.</p>
+      <p style="margin-top:8px;font-weight:600">Post-2029 stranded cost: approximately $0.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Context</h2>
+    <div class="note" style="margin:0;background:transparent;padding:0">
+      <p><strong>What is BH-CONNECT?</strong> California's Section 1115 demonstration (approved by CMS Dec 2024) allows counties to claim 50% federal Medicaid matching on eligible services in qualifying IMDs through Dec 2029. Three counties approved: Sacramento, San Diego, Santa Clara. 15 more planning to opt in.</p>
+      <p style="margin-top:8px"><strong>What are qualifying facilities?</strong> Mental Health Rehabilitation Centers (MHRCs), Psychiatric Health Facilities (PHFs), and freestanding Acute Psychiatric Hospitals (APHs) on the DHCS IMD list. SNF/STP facilities, QRTPs, and general hospital psych units do not qualify.</p>
+      <p style="margin-top:8px"><strong>National evidence:</strong> 15 states with IMD waivers show 14% fewer psychiatric inpatient admissions, 26% fewer ED visits, 11% fewer incarcerations, 41% lower psychiatric costs, with no overall cost increase (AJMC, 2025, 3.2M beneficiaries).</p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <p>Built by the <a href="https://www.courtyardsinstitute.org/">Courtyards Institute</a></p>
+  <p style="margin-top:4px">Data: HCAI facility profiles (hcai.ca.gov), DHCS BHIN 25-011, CMS BH-CONNECT approval</p>
+  <p style="margin-top:4px">Methodology: MC FFS Revenue &times; 0.76 (age 21-64 &times; SMI) &times; 0.50 (FMAP)</p>
+</footer>
+
+</div>
+
+<script>
+const FACILITIES = {
+  john_muir_bhc: { name: "John Muir Behavioral Health Center", county: "Contra Costa", beds: 73, mc_ffs: 11020000, type: "APH", alos: 6.1, occ: 73.3, size: "medium", ebps: { act: true, fact: true, csc: true, ips: false, chw: true, peer: true } },
+  srbhh: { name: "Santa Rosa Behavioral Healthcare Hospital", county: "Sonoma", beds: 144, mc_ffs: 13900000, type: "APH", alos: 10.2, occ: 78, size: "small", ebps: { act: true, fact: true, csc: false, ips: false, chw: false, peer: false } },
+  fremont_hospital: { name: "Fremont Hospital", county: "Alameda", beds: 148, mc_ffs: 14900000, type: "APH", alos: 8.2, occ: 100, size: "medium", ebps: { act: true, fact: true, csc: false, ips: false, chw: true, peer: true } },
+  aliso_ridge: { name: "Aliso Ridge Behavioral Health", county: "Orange", beds: 119, mc_ffs: 9500000, type: "APH", alos: 9.6, occ: 72.6, size: "large", ebps: { act: true, fact: true, csc: false, ips: false, chw: false, peer: false } },
+  canyon_ridge: { name: "Canyon Ridge Hospital", county: "San Bernardino", beds: 157, mc_ffs: 8300000, type: "APH", alos: 7.6, occ: 68, size: "large", ebps: { act: false, fact: false, csc: false, ips: false, chw: false, peer: false } },
+  del_amo: { name: "Del Amo Hospital", county: "Los Angeles", beds: 166, mc_ffs: 13720000, type: "APH", alos: null, size: "large", ebps: { act: true, fact: true, csc: true, ips: false, chw: true, peer: true } },
+  bhc_alhambra: { name: "BHC Alhambra Hospital", county: "Los Angeles", beds: 97, mc_ffs: 9270000, type: "APH", alos: null, size: "large", ebps: { act: true, fact: true, csc: true, ips: false, chw: true, peer: true } },
+  resnick_ucla: { name: "Resnick Neuropsychiatric Hospital UCLA", county: "Los Angeles", beds: 74, mc_ffs: 5620000, type: "APH", alos: null, size: "large", ebps: { act: true, fact: true, csc: true, ips: false, chw: true, peer: true } },
+  charter_oak: { name: "Aurora Charter Oak Hospital", county: "Los Angeles", beds: 134, mc_ffs: 5270000, type: "APH", alos: null, size: "large", ebps: { act: true, fact: true, csc: true, ips: false, chw: true, peer: true } },
+  college_hospital: { name: "College Hospital", county: "Los Angeles", beds: 187, mc_ffs: 4900000, type: "APH", alos: null, size: "large", ebps: { act: true, fact: true, csc: true, ips: false, chw: true, peer: true } },
+  bbhh: { name: "Bakersfield Behavioral Healthcare Hospital", county: "Kern", beds: 90, mc_ffs: 7870000, type: "APH", alos: 8.4, occ: 84, size: "medium", ebps: { act: true, fact: true, csc: false, ips: false, chw: false, peer: false } },
+  adventist_vallejo: { name: "Adventist Health Vallejo", county: "Solano", beds: 61, mc_ffs: 9810000, type: "APH", alos: 8.4, occ: 91, size: "small", ebps: { act: true, fact: true, csc: false, ips: false, chw: false, peer: false } },
+  aurora_vdm: { name: "Aurora Vista Del Mar Hospital", county: "Ventura", beds: 87, mc_ffs: 2580000, type: "APH", alos: 6.5, size: "medium", ebps: { act: true, fact: true, csc: false, ips: false, chw: false, peer: false } }
+};
+
+// Cross-browser checkbox pill toggle (replaces :has() CSS)
+function togglePill(input) {
+  var label = input.parentElement;
+  if (input.checked) {
+    label.className = label.className.replace(' checked', '') + ' checked';
+  } else {
+    label.className = label.className.replace(' checked', '');
+  }
+}
+
+// Compliance cost model
+function complianceCost(ebps, countySize) {
+  var cost = 0;
+  var scale = countySize === 'large' ? 1.4 : countySize === 'small' ? 0.7 : 1.0;
+  cost += 275000 * scale; // Base admin/reporting
+  if (!ebps.act) cost += 0; // ACT is BHSA-mandated: sunk cost
+  if (!ebps.fact) cost += 550000 * scale;
+  if (!ebps.csc) cost += 650000 * scale;
+  if (!ebps.ips) cost += 300000 * scale;
+  if (!ebps.chw) cost += 150000 * scale;
+  if (!ebps.peer) cost += 150000 * scale;
+  return cost;
+}
+
+function fmt(n) {
+  if (Math.abs(n) >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
+  if (Math.abs(n) >= 1e3) return '$' + Math.round(n / 1e3) + 'K';
+  return '$' + Math.round(n);
+}
+
+function fmtFull(n) { return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 }); }
+
+// Facility selection handler
+document.getElementById('facility-select').addEventListener('change', function() {
+  var f = FACILITIES[this.value];
+  var infoDiv = document.getElementById('facility-info');
+  if (f) {
+    document.getElementById('mc-ffs-revenue').value = f.mc_ffs;
+    document.getElementById('facility-type').value = f.type;
+    if (f.alos) document.getElementById('alos').value = f.alos;
+    if (f.size) document.getElementById('county-size').value = f.size;
+
+    // Show facility info
+    var alosText = f.alos ? f.alos + '-day ALOS' : 'ALOS not available';
+    var occText = f.occ ? f.occ + '% occupancy' : '';
+    infoDiv.innerHTML = '<span>' + f.name + '</span> &middot; ' + f.county + ' County &middot; ' +
+      f.beds + ' beds &middot; ' + alosText + (occText ? ' &middot; ' + occText : '');
+    infoDiv.className = 'facility-info visible';
+
+    // Auto-populate EBP checkboxes
+    if (f.ebps) {
+      var ids = ['act', 'fact', 'csc', 'ips', 'chw', 'peer'];
+      for (var i = 0; i < ids.length; i++) {
+        var cb = document.getElementById('ebp-' + ids[i]);
+        cb.checked = f.ebps[ids[i]];
+        togglePill(cb);
+      }
+    }
+
+    // Auto-calculate
+    calculate();
+  } else {
+    infoDiv.className = 'facility-info';
+  }
+});
+
+function calculate() {
+  var mcFfs = parseFloat(document.getElementById('mc-ffs-revenue').value) || 0;
+  var facType = document.getElementById('facility-type').value;
+  var alos = parseFloat(document.getElementById('alos').value) || 0;
+  var countySize = document.getElementById('county-size').value;
+
+  if (mcFfs <= 0) {
+    if (document.getElementById('facility-select').value === '') {
+      alert('Please select a facility or enter Medi-Cal FFS Inpatient Revenue.');
+    }
+    return;
+  }
+
+  var ebps = {
+    act: document.getElementById('ebp-act').checked,
+    fact: document.getElementById('ebp-fact').checked,
+    csc: document.getElementById('ebp-csc').checked,
+    ips: document.getElementById('ebp-ips').checked,
+    chw: document.getElementById('ebp-chw').checked,
+    peer: document.getElementById('ebp-peer').checked,
+  };
+
+  // FFP Calculation
+  var eligible = mcFfs * 0.76;
+  var grossFfp = eligible * 0.50;
+
+  // MHRC adjustment: room & board excluded
+  var isMHRC = facType === 'MHRC';
+  if (isMHRC) grossFfp *= 0.45;
+
+  var compliance = complianceCost(ebps, countySize);
+  var netFfp = grossFfp - compliance;
+
+  var yearsRemaining = 3.0;
+  var cumulative = netFfp * yearsRemaining;
+  var monthlyDelay = grossFfp / 12;
+
+  // Display results
+  document.getElementById('results').className = 'visible';
+  document.getElementById('results').style.display = 'block';
+
+  var mainBox = document.getElementById('result-main');
+  mainBox.className = netFfp > 0 ? 'result-box positive' : 'result-box negative';
+  document.getElementById('result-net').textContent = fmt(netFfp) + '/year';
+  document.getElementById('result-gross').textContent = fmt(grossFfp);
+  document.getElementById('result-compliance').textContent = fmt(compliance);
+  document.getElementById('result-delay').textContent = fmt(monthlyDelay);
+  document.getElementById('result-cumulative').textContent = fmt(cumulative);
+
+  // Calculation breakdown
+  document.getElementById('calc-mcffs').textContent = fmtFull(mcFfs);
+  document.getElementById('calc-eligible').textContent = fmtFull(Math.round(eligible));
+  document.getElementById('calc-gross').textContent = fmtFull(Math.round(isMHRC ? eligible * 0.50 : grossFfp));
+  var rbRow = document.getElementById('calc-rb-row');
+  if (isMHRC) {
+    rbRow.style.display = '';
+    document.getElementById('calc-rb').textContent = fmtFull(Math.round(grossFfp));
+  } else {
+    rbRow.style.display = 'none';
+  }
+  document.getElementById('calc-comp').textContent = '-' + fmtFull(Math.round(compliance));
+  document.getElementById('calc-net').textContent = fmtFull(Math.round(netFfp));
+
+  var methNote = document.getElementById('methodology-note');
+  methNote.innerHTML = '<strong>Methodology:</strong> Medi-Cal FFS revenue from HCAI facility profiles (hcai.ca.gov). ' +
+    'The 0.76 factor adjusts for ages 21-64 (89%, ACS/CMS) and SMI primary diagnosis (85%, SAMHSA NSDUH). ' +
+    (isMHRC ? 'The 0.45 MHRC factor reflects room &amp; board exclusion: only SMHS clinical service costs are FFP-eligible for residential facilities. ' : '') +
+    'Compliance costs reflect incremental costs beyond what BHSA already mandates (ACT teams are a sunk cost under WIC &sect;5887(a)(2)).';
+
+  // Sensitivity table
+  var sensBody = document.getElementById('sensitivity-table');
+  sensBody.innerHTML = '';
+  var pcts = [-20, -10, 0, 10, 20];
+  for (var p = 0; p < pcts.length; p++) {
+    var pct = pcts[p];
+    var adjRev = mcFfs * (1 + pct / 100);
+    var adjGross = adjRev * 0.76 * 0.50;
+    if (isMHRC) adjGross *= 0.45;
+    var adjNet = adjGross - compliance;
+    var row = document.createElement('tr');
+    if (pct === 0) row.className = 'highlight';
+    row.innerHTML = '<td>' + (pct > 0 ? '+' : '') + pct + '%</td><td>' + fmt(adjRev) + '</td><td>' + fmt(adjGross) + '</td><td>' + fmt(adjNet) + '</td>';
+    sensBody.appendChild(row);
+  }
+
+  // LOS check
+  var losDiv = document.getElementById('los-check');
+  if (alos > 0) {
+    if (alos <= 30) {
+      losDiv.innerHTML = '<div class="result-box positive"><span class="tag pass">Low Risk</span> <strong>' + alos + '-day average LOS</strong> is well below the 60-day BH-CONNECT cap and the 30-day statewide average target. Ideal for this program.</div>';
+    } else if (alos <= 60) {
+      losDiv.innerHTML = '<div class="result-box neutral"><span class="tag warn">Moderate Risk</span> <strong>' + alos + '-day average LOS</strong> is under the 60-day cap but above the 30-day statewide target. Stays exceeding 60 days receive $0 FFP for the entire episode. Monitor closely.</div>';
+    } else {
+      losDiv.innerHTML = '<div class="result-box negative"><span class="tag fail">High Risk</span> <strong>' + alos + '-day average LOS</strong> exceeds the 60-day cap. Stays over 60 days receive $0 FFP for the entire episode. This facility likely faces Santa Barbara-like economics.</div>';
+    }
+  } else {
+    losDiv.innerHTML = '<div class="result-box neutral"><span class="tag warn">Unknown</span> Enter Average Length of Stay above for a viability assessment. BH-CONNECT requires &le;60 days per stay, &le;30 days statewide average.</div>';
+  }
+
+  // Santa Barbara comparison
+  document.getElementById('sb-your-type').textContent = facType === 'APH' ? 'Acute Psychiatric Hospital' : facType === 'PHF' ? 'Psychiatric Health Facility' : 'MHRC (residential)';
+  document.getElementById('sb-your-los').textContent = alos > 0 ? alos + ' days' : 'Not entered';
+  document.getElementById('sb-your-basis').textContent = isMHRC ? 'Services only (R&B excluded)' : 'Full per diem';
+  var riskEl = document.getElementById('sb-your-risk');
+  if (alos > 0 && alos <= 30) riskEl.innerHTML = '<span class="tag pass">Low</span>';
+  else if (alos > 0 && alos <= 60) riskEl.innerHTML = '<span class="tag warn">Moderate</span>';
+  else if (alos > 60) riskEl.innerHTML = '<span class="tag fail">High</span>';
+  else riskEl.innerHTML = '<span class="tag warn">Unknown</span>';
+  document.getElementById('sb-your-ffp').textContent = fmt(netFfp) + '/yr';
+  document.getElementById('sb-your-ffp').style.color = netFfp > 0 ? 'var(--green)' : 'var(--red)';
+
+  // Scroll to results (only on button click, not auto-calculate)
+  if (document.activeElement && document.activeElement.tagName === 'BUTTON') {
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+</script>
+</body>
+</html>
